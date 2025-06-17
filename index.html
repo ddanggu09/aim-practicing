@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>에임 연습 게임</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    #startScreen {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-size: 24px;
+    }
+
+    #startScreen h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+
+    #startScreen p {
+      max-width: 600px;
+      font-size: 20px;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    #gameArea {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: none;
+    }
+
+    #timerBarContainer {
+      width: 80%;
+      height: 20px;
+      background: #555;
+      margin: 20px auto;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    #timerBar {
+      width: 100%;
+      height: 100%;
+      background: #4caf50;
+    }
+
+    #scoreDisplay {
+      font-size: 24px;
+      margin: 10px;
+    }
+
+    .target {
+      position: absolute;
+      background-image: url('2.png');
+      background-size: cover;
+      cursor: crosshair;
+    }
+
+    .head, .body {
+      position: absolute;
+      background-color: transparent;
+    }
+  </style>
+</head>
+<body>
+
+<div id="startScreen">
+  <h1>에임 연습 게임</h1>
+  <p>
+    게임방법: 타겟을 맞추어 점수를 얻는다.<br>
+    몸을 맞출 시 3번을 쏴야 잡을 수 있고,<br>
+    머리를 맞출 시 한 번에 잡을 수 있다.
+  </p>
+  <button onclick="startGame()" style="font-size: 24px; padding: 10px 20px;">게임 시작</button>
+</div>
+
+<div id="gameArea">
+  <div id="timerBarContainer">
+    <div id="timerBar"></div>
+  </div>
+  <div id="scoreDisplay">점수: 0</div>
+</div>
+
+<script>
+  let score = 0;
+  let timeLeft = 30;
+  let timerInterval;
+  let targetElement;
+  let bodyHits = 0;
+
+  const startScreen = document.getElementById('startScreen');
+  const gameArea = document.getElementById('gameArea');
+  const scoreDisplay = document.getElementById('scoreDisplay');
+  const timerBar = document.getElementById('timerBar');
+
+  function startGame() {
+    score = 0;
+    timeLeft = 30;
+    bodyHits = 0;
+
+    startScreen.style.display = 'none';
+    gameArea.style.display = 'block';
+    scoreDisplay.innerText = '점수: 0';
+    updateTimerBar();
+
+    spawnTarget();
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateTimerBar();
+
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        alert(`게임 종료! 점수: ${score}`);
+        gameArea.innerHTML = `
+          <div id="timerBarContainer"><div id="timerBar"></div></div>
+          <div id="scoreDisplay">점수: ${score}</div>
+        `;
+        gameArea.style.display = 'none';
+        startScreen.style.display = 'flex';
+      }
+    }, 1000);
+  }
+
+  function updateTimerBar() {
+    timerBar.style.width = (timeLeft / 30) * 100 + '%';
+  }
+
+  function spawnTarget() {
+    if (targetElement) targetElement.remove();
+
+    // 랜덤 크기 설정
+    const width = Math.floor(Math.random() * 61) + 60;  // 60~120px
+    const height = width; // 정사각형 유지
+
+    const maxLeft = window.innerWidth - width;
+    const maxTop = window.innerHeight - height - 100;
+
+    const left = Math.random() * maxLeft;
+    const top = Math.random() * maxTop + 60;
+
+    targetElement = document.createElement('div');
+    targetElement.className = 'target';
+    targetElement.style.width = `${width}px`;
+    targetElement.style.height = `${height}px`;
+    targetElement.style.left = `${left}px`;
+    targetElement.style.top = `${top}px`;
+
+    // 머리 크기/위치
+    const head = document.createElement('div');
+    head.className = 'head';
+    head.style.width = `${width * 0.4}px`;
+    head.style.height = `${height * 0.4}px`;
+    head.style.left = `${width * 0.3}px`;
+    head.style.top = `${height * 0.1}px`;
+
+    head.onclick = () => {
+      score++;
+      scoreDisplay.innerText = `점수: ${score}`;
+      spawnTarget();
+    };
+
+    // 몸통 크기/위치
+    const body = document.createElement('div');
+    body.className = 'body';
+    body.style.width = `${width * 0.6}px`;
+    body.style.height = `${height * 0.4}px`;
+    body.style.left = `${width * 0.2}px`;
+    body.style.top = `${height * 0.5}px`;
+
+    body.onclick = () => {
+      bodyHits++;
+      if (bodyHits >= 3) {
+        score++;
+        scoreDisplay.innerText = `점수: ${score}`;
+        bodyHits = 0;
+        spawnTarget();
+      }
+    };
+
+    targetElement.appendChild(head);
+    targetElement.appendChild(body);
+    gameArea.appendChild(targetElement);
+  }
+</script>
+
+</body>
+</html>
